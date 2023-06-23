@@ -57,6 +57,6 @@ def gerenerateEsquema(banco, n_tuplas, n_paginas, n_tabelas, n_areas) -> Dict[st
 
 
 
-banco = Objetos('Banco', 'BD')
-dicionário = gerenerateEsquema(banco, 2, 2, 2, 2)
-print(dicionário)
+x = [[2,3]]
+y = [[5,6]]
+print(x + y)

@@ -61,7 +61,7 @@ def locks_commit(vetor, transaction):
     for i in vetor:
         bloqueios.liberar_locks(i[2], transaction)
 
-def protocolo(vetor_tran):
+def protocolo(vetor_tran, solucao=[]):
     esperando = []
     s = []
     for k,i in enumerate(vetor_tran):
@@ -96,12 +96,13 @@ def protocolo(vetor_tran):
             else:
                 locks_commit(s, i[1])
                 s.append(i)
-    if len(esperando) > 0: return protocolo(esperando)
-    else: return s
+    solucao.append(s)
+    if len(esperando) > 0: return protocolo(esperando, solucao)
+    else: return solucao 
 
 scheduler = protocolo(vetor_tran)
-print(scheduler)
-    
+print(scheduler[0])
+
 def abortar_transaction(vetor):
     pass       
 
