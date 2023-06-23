@@ -18,6 +18,9 @@ class Objetos:
     def converte_version(self, transaction):
         self.version = transaction
 
+    def version_normal(self):
+        self.version = 'Antiga'
+
     def get_id(self) -> str:
         return self.ID_Objeto  
     

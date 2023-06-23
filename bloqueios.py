@@ -66,8 +66,8 @@ def liberar_locks(objeto, transaction):
     for i in ordem:
         for j, k in enumerate(objeto.parentes[i][0].bloqueios):
             if k[1] == verifica: del objeto.parentes[i][0].bloqueios[j]
-    ordem = list(objeto[2].parentes.keys())
-    ordem = ordem[objeto[2].index+1:]
+    ordem = list(objeto.parentes.keys())
+    ordem = ordem[objeto.index+1:]
     for i in ordem:
         for j, k in enumerate(objeto.parentes[i][0].bloqueios):
             if k[1] == verifica: del objeto.parentes[i][0].bloqueios[j]
@@ -95,17 +95,23 @@ def lock_certify(objeto, transaction):
             if k[1] == transaction and k[0] == 'IWL':
                 objeto.parentes[i][0].bloqueios[j][0] = 'ICL'
 
-def check_locks(objeto, tipo:str, transaction) -> bool:
+
+def check_locks(objeto, tipo:str, transaction) -> tuple:
     if tipo == 'RL':
         for i in objeto.bloqueios:
             if i[0] == 'CL' or i[0] == 'ICL':
-                if i[1] != transaction.get_transaction(): return False
-            else: return True
+                if i[1] != transaction.get_transaction(): 
+                    return (False, i[1])
+            else: 
+                return (True, i[1])
     if tipo == 'WL':
         for i in objeto.bloqueios:
             if i[0] == 'CL' or i[0] == 'WL' or i[0] == 'ICL' or i[0] == 'IWL':
-                if i[1] != transaction.get_transaction(): return False
-            else: return True
+                if i[1] != transaction.get_transaction(): 
+                    return (False, i[1])
+            else: 
+                return (True, i[1])
+    return (True, None)
     
 
 
