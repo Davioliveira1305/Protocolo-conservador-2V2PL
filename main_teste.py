@@ -7,12 +7,8 @@ from bloqueios import lock_write
 from bloqueios import liberar_locks
 from bloqueios import lock_certify
 from bloqueios import check_locks
+import protocolo
 
-# Inicializando o banco de dados
-ob = objetos.Objetos('Banco', 'BD')
-
-# Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
-dic = objetos.criar_esquema(ob,2,2,2,2)
 
 scheduler = 'R1(TB1)R3(TP1)C4R2(TB4)W2(AA1)R3(TP1)'
 
@@ -51,3 +47,15 @@ def cria_objetos(scheduler):
             vetor_tran.append(vetor)
     return vetor_tran
 
+def main():
+    scheduler = str(input("Digite o schedule: "))
+    # Inicializando o banco de dados
+    ob = objetos.Objetos('Banco', 'BD')
+
+    # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
+    dic = objetos.criar_esquema(ob,2,2,2,2)
+
+    correct_scheduler = protocolo_2v(scheduler)
+    print(correct_scheduler)
+
+main()
