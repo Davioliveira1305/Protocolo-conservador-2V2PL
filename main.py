@@ -30,7 +30,6 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 4])
             aux.append(elementos[j + 5])
             vetor.append(dic[''.join(aux)])
-            vetor.append(f'R{vetor[1].get_index()}({vetor[2].get_id()})')
             vetor_tran.append(vetor)
         if elementos[j] == 'W':
             vetor = []
@@ -41,13 +40,11 @@ def cria_objetos(scheduler):
             aux_1.append(elementos[j + 4])
             aux_1.append(elementos[j + 5])
             vetor.append(dic[''.join(aux_1)])
-            vetor.append(f'W{vetor[1].get_index()}({vetor[2].get_id()})')
             vetor_tran.append(vetor)
         if elementos[j] == 'C':
             vetor = []
             vetor.append(operations.Operation('C')) 
             vetor.append(transactions.Transaction(elementos[j + 1]))
-            vetor.append(f'C{vetor[1].get_index()}')
             vetor_tran.append(vetor)
     return vetor_tran
 

@@ -31,10 +31,10 @@ class Objetos:
         return self.index
 
     def __repr__(self) -> str:
-        return f"ID_Objeto = {self.ID_Objeto} Versão = {self.version}"
+        return f"ID_Objeto = {self.ID_Objeto} -> Versão = {self.version}"
     
     def __str__(self) -> str:
-        return f"ID_Objeto = {self.ID_Objeto}, Versão = {self.version}"
+        return f"ID_Objeto = {self.ID_Objeto} Versão = {self.version}"
 
 """
 Função que define se um determinado objeto é parente do outro

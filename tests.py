@@ -56,7 +56,7 @@ def gerenerateEsquema(banco, n_tuplas, n_paginas, n_tabelas, n_areas) -> Dict[st
     return dicionário
 
 
-
-x = [[2,3]]
-y = [[5,6]]
-print(x + y)
+vetor = [1,2,3,4,5]
+for i, k in enumerate(vetor):
+    print(k)
+    if i == 2: break

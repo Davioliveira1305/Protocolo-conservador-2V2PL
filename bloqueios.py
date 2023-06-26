@@ -104,7 +104,7 @@ def check_locks(objeto, tipo:str, transaction) -> tuple:
                     return (False, i[1])
             else: 
                 return (True, i[1])
-    if tipo == 'WL':
+    elif tipo == 'WL':
         for i in objeto.bloqueios:
             if i[0] == 'CL' or i[0] == 'WL' or i[0] == 'ICL' or i[0] == 'IWL':
                 if i[1] != transaction.get_transaction(): 
