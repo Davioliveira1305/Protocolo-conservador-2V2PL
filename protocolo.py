@@ -13,9 +13,41 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'R2(TP1)R1(TP5)W2(TP6)R3(TP1)R1(TP6)W3(TP11)R2(TP11)W3(TP5)C3C1C2'
+scheduler = 'R1(TP1)W2(TP1)C2W1(TP1)C1'
 
-vetor_tran = main.cria_objetos(scheduler)
+def cria_objetos(scheduler):
+    elementos = list(scheduler)
+    vetor_tran = []
+    i = [i for i in range(len(elementos))]
+    for j in i:
+        if elementos[j] == 'R':
+            vetor = []
+            aux = []
+            vetor.append(operations.Operation('R'))
+            vetor.append(transactions.Transaction(elementos[j + 1]))
+            aux.append(elementos[j + 3])
+            aux.append(elementos[j + 4])
+            aux.append(elementos[j + 5])
+            vetor.append(dic[''.join(aux)])
+            vetor_tran.append(vetor)
+        if elementos[j] == 'W':
+            vetor = []
+            aux_1 = []
+            vetor.append(operations.Operation('W'))
+            vetor.append(transactions.Transaction(elementos[j + 1]))
+            aux_1.append(elementos[j + 3])
+            aux_1.append(elementos[j + 4])
+            aux_1.append(elementos[j + 5])
+            vetor.append(dic[''.join(aux_1)])
+            vetor_tran.append(vetor)
+        if elementos[j] == 'C':
+            vetor = []
+            vetor.append(operations.Operation('C')) 
+            vetor.append(transactions.Transaction(elementos[j + 1]))
+            vetor_tran.append(vetor)
+    return vetor_tran
+
+vetor_tran = cria_objetos(scheduler)
 
 """
 bloqueios.lock_write(vetor_tran[0])
@@ -23,20 +55,16 @@ analise, t = bloqueios.check_locks(vetor_tran[0][2], 'WL', vetor_tran[0][1])
 print(analise, t)
 """
 
-# Criar um objeto do tipo grafo direcionado
-grafo = nx.DiGraph()
-# Adicionar nós
 def cria_nos(grafo, vetor_tran):
-   for i in range(len(vetor_tran)):
-      for j in range(len(vetor_tran[i]) - 1):
-         if vetor_tran[i][j].get_tipo() == 'T':
-            grafo.add_node(f"{vetor_tran[i][j].get_transaction()}")
+    transactions = []
+    for i in vetor_tran:
+        if i[1] not in transactions:
+            grafo.add_node(f'{i[1].get_transaction()}')
+            transactions.append(i[1])
 
-cria_nos(grafo, vetor_tran)
-
-def cria_aresta(grafo, transaction1, transaction2):
-    grafo.add_edge(transaction1, transaction2)
-
+"""
+Função que retorna False quando grafo não tem ciclo e True caso contrário
+"""
 def grafo_espera(grafo):
     tem_ciclo = nx.is_directed_acyclic_graph(grafo)
     if tem_ciclo:
@@ -58,7 +86,8 @@ def verifica_leitura(vetor, transaction):
         for k in j.bloqueios:
             if k[0] == 'RL':
                 if k[1] != transaction.get_transaction():
-                    return True
+                    return (True, k[1])
+    return (False, None)
 
 def verifica_operation(vetor, transaction):
     for i in vetor:
@@ -69,24 +98,29 @@ def locks_commit(vetor, transaction):
         if i[0].operation != 'Commit':
             bloqueios.liberar_locks(i[2], transaction)
 
-
 def protocolo(vetor_tran):
+    # Criar um objeto do tipo grafo direcionado, será o nosso grafo de espera
+    grafo = nx.DiGraph()
+    # Criar os nós do grafo
+    cria_nos(grafo, vetor_tran)
     s = []
     while True:        
         esperando = []
         for k,i in enumerate(vetor_tran):
             if i[0].get_operation() == 'Write':
-                analise, t = bloqueios.check_locks(i[2], 'WL', i[1])           
-                if analise != False:
-                    bloqueios.lock_write(i)
+                analise, t = bloqueios.check_locks(s, 'WL', i[1])
+                if analise != False:                   
                     i[2].converte_version(i[1]) 
                     objeto_copy = copy.deepcopy(i)
                     s.append(objeto_copy)
                     i[2].version_normal()
+                    bloqueios.lock_write(i)
                 else:
+                    grafo.add_edge(t,i[1].get_transaction())
+                    if grafo_espera(grafo) == True: return 'O scheduler possui deadlock!!!!!!!'    
                     esperando.append(i)
-            if (i[0].get_operation() == 'Read'):
-                analise, t = bloqueios.check_locks(i[2], 'RL', i[1])
+            elif (i[0].get_operation() == 'Read'):
+                analise, t = bloqueios.check_locks(s, 'RL', i[1])
                 if analise != False:
                     bloqueios.lock_read(i)
                     if verifica_escrita(i[1], i[2]) == True:
@@ -97,22 +131,34 @@ def protocolo(vetor_tran):
                     else:
                         s.append(i)
                 else:
-                    esperando.append(i)
-            
-            if(i[0].get_operation() == 'Commit'):
-                if verifica_leitura(s, i[1]) == True:
-                    esperando.append(i)                
+                    grafo.add_edge(t,i[1].get_transaction())
+                    if grafo_espera(grafo) == True:
+                        return 'O scheduler possui deadlock!!!!!!!'
+                    esperando.append(i)          
+            else:
+                analise, t = verifica_leitura(s, i[1])
+                if analise == True:
+                    esperando.append(i) 
+                    grafo.add_edge(t,i[1].get_transaction())
+                    if grafo_espera(grafo) == True: return 'O scheduler possui deadlock!!!!!!!'
+                elif verifica_operation(esperando, i[1]) == True:
+                    if i not in esperando:
+                        esperando.append(i)
                 else:
                     locks_commit(vetor_tran, i[1])
                     locks_commit(s, i[1])
+                    grafo.remove_node(i[1].get_transaction())
                     s.append(i)
         vetor_tran = esperando
         if len(vetor_tran) == 0: break
+    nx.draw(grafo, with_labels=True)
+    plt.show()
     return s
 scheduler = protocolo(vetor_tran)
 
 print(scheduler)
 
 def abortar_transaction(vetor):
-    pass       
+    return vetor[-1][1]
+
 

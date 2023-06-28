@@ -96,21 +96,23 @@ def lock_certify(objeto, transaction):
                 objeto.parentes[i][0].bloqueios[j][0] = 'ICL'
 
 
-def check_locks(objeto, tipo:str, transaction) -> tuple:
+def check_locks(vetor, tipo:str, transaction) -> tuple:
+    transactions = []
+    if len(vetor) == 0: return (True, None)    
     if tipo == 'RL':
-        for i in objeto.bloqueios:
+        for i in vetor[0][2].bloqueios:
             if i[0] == 'CL' or i[0] == 'ICL':
-                if i[1] != transaction.get_transaction(): 
+                if i[1] != transaction.get_transaction():
                     return (False, i[1])
-            else: 
-                return (True, i[1])
-    elif tipo == 'WL':
-        for i in objeto.bloqueios:
+            transactions.append(i[1])
+        return (True, transactions)
+    else:
+        for i in vetor[0][2].bloqueios:
             if i[0] == 'CL' or i[0] == 'WL' or i[0] == 'ICL' or i[0] == 'IWL':
                 if i[1] != transaction.get_transaction(): 
                     return (False, i[1])
-            else: 
-                return (True, i[1])
+            transactions.append(i[1])
+        return (True, transactions)
     return (True, None)
     
 

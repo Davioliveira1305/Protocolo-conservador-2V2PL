@@ -8,6 +8,7 @@ from bloqueios import liberar_locks
 from bloqueios import lock_certify
 from bloqueios import check_locks
 
+""""
 # Inicializando o banco de dados
 ob = objetos.Objetos('Banco', 'BD')
 
@@ -15,6 +16,7 @@ ob = objetos.Objetos('Banco', 'BD')
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
 scheduler = 'R1(TB1)R3(TP1)C4R2(TB4)W2(AA1)R3(TP1)'
+"""
 
 def cria_objetos(scheduler):
     elementos = list(scheduler)
