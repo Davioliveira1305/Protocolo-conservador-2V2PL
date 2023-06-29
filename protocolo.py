@@ -13,7 +13,7 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'R1(TP1)W2(TP1)C2W1(TP1)C1'
+scheduler = 'R1(TP1)W2(TP1)W2(TP2)C2C1'
 
 def cria_objetos(scheduler):
     elementos = list(scheduler)
@@ -49,12 +49,6 @@ def cria_objetos(scheduler):
 
 vetor_tran = cria_objetos(scheduler)
 
-"""
-bloqueios.lock_write(vetor_tran[0])
-analise, t = bloqueios.check_locks(vetor_tran[0][2], 'WL', vetor_tran[0][1])
-print(analise, t)
-"""
-
 def cria_nos(grafo, vetor_tran):
     transactions = []
     for i in vetor_tran:
@@ -62,9 +56,6 @@ def cria_nos(grafo, vetor_tran):
             grafo.add_node(f'{i[1].get_transaction()}')
             transactions.append(i[1])
 
-"""
-Função que retorna False quando grafo não tem ciclo e True caso contrário
-"""
 def grafo_espera(grafo):
     tem_ciclo = nx.is_directed_acyclic_graph(grafo)
     if tem_ciclo:
@@ -89,6 +80,7 @@ def verifica_leitura(vetor, transaction):
                     return (True, k[1])
     return (False, None)
 
+
 def verifica_operation(vetor, transaction):
     for i in vetor:
         if i[1].get_transaction() == transaction.get_transaction(): return True
@@ -97,6 +89,13 @@ def locks_commit(vetor, transaction):
     for i in vetor:
         if i[0].operation != 'Commit':
             bloqueios.liberar_locks(i[2], transaction)
+
+def abortar_transaction(vetor):
+    transaction = vetor[-1][1].get_transaction()
+    for k in reversed(range(len(vetor))):
+        if vetor[k][1].get_transaction() == transaction:
+            del vetor[k]
+    return vetor
 
 def protocolo(vetor_tran):
     # Criar um objeto do tipo grafo direcionado, será o nosso grafo de espera
@@ -136,6 +135,7 @@ def protocolo(vetor_tran):
                         return 'O scheduler possui deadlock!!!!!!!'
                     esperando.append(i)          
             else:
+                bloqueios.converte_certify(s, i[1])
                 analise, t = verifica_leitura(s, i[1])
                 if analise == True:
                     esperando.append(i) 
@@ -154,11 +154,8 @@ def protocolo(vetor_tran):
     nx.draw(grafo, with_labels=True)
     plt.show()
     return s
-scheduler = protocolo(vetor_tran)
 
-print(scheduler)
+print(protocolo(vetor_tran))
 
-def abortar_transaction(vetor):
-    return vetor[-1][1]
 
 
