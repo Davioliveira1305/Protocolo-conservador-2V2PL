@@ -13,7 +13,7 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'R1(TP1)W2(TP1)W2(TP2)C2C1'
+scheduler = 'R2(TP1)R1(TP2)W2(TP3)R3(TP1)R1(TP3)W3(TP4)R2(TP4)W3(TP4)C3C1C2'
 
 def cria_objetos(scheduler):
     elementos = list(scheduler)
@@ -63,7 +63,6 @@ def grafo_espera(grafo):
     else:
         return True
 
-
 def verifica_escrita(transaction, objeto):
     for i in objeto.bloqueios:
         if transaction.get_transaction() == i[1] and i[0] == 'WL': return True
@@ -79,7 +78,6 @@ def verifica_leitura(vetor, transaction):
                 if k[1] != transaction.get_transaction():
                     return (True, k[1])
     return (False, None)
-
 
 def verifica_operation(vetor, transaction):
     for i in vetor:
@@ -97,6 +95,24 @@ def abortar_transaction(vetor):
             del vetor[k]
     return vetor
 
+def converte_certify(vetor, transaction, k):
+    vetor_obj = []    
+    for i in vetor:
+        if i[0].get_operation() != 'Commit':
+            if i[1].get_transaction() == transaction.get_transaction() and i[0].get_operation() == 'Write':
+                vetor_obj.append(i[2])
+    vetor_obj_2 = []
+    for j in vetor_obj:
+        selection = True
+        for k in j.bloqueios:
+            if k[0] == 'RL' and k[1] != transaction.get_transaction():
+                selection = False
+                break
+        if selection:
+            vetor_obj_2.append(j)
+    for d in vetor_obj_2:
+        bloqueios.lock_certify(d, transaction)
+
 def protocolo(vetor_tran):
     # Criar um objeto do tipo grafo direcionado, será o nosso grafo de espera
     grafo = nx.DiGraph()
@@ -107,19 +123,19 @@ def protocolo(vetor_tran):
         esperando = []
         for k,i in enumerate(vetor_tran):
             if i[0].get_operation() == 'Write':
-                analise, t = bloqueios.check_locks(s, 'WL', i[1])
-                if analise != False:                   
+                analise, t = bloqueios.check_locks(s,i, 'WL', i[1])
+                if analise != False: 
+                    bloqueios.lock_write(i)                  
                     i[2].converte_version(i[1]) 
                     objeto_copy = copy.deepcopy(i)
                     s.append(objeto_copy)
-                    i[2].version_normal()
-                    bloqueios.lock_write(i)
+                    i[2].version_normal()                                
                 else:
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True: return 'O scheduler possui deadlock!!!!!!!'    
                     esperando.append(i)
             elif (i[0].get_operation() == 'Read'):
-                analise, t = bloqueios.check_locks(s, 'RL', i[1])
+                analise, t = bloqueios.check_locks(s,i, 'RL', i[1])
                 if analise != False:
                     bloqueios.lock_read(i)
                     if verifica_escrita(i[1], i[2]) == True:
@@ -135,9 +151,9 @@ def protocolo(vetor_tran):
                         return 'O scheduler possui deadlock!!!!!!!'
                     esperando.append(i)          
             else:
-                bloqueios.converte_certify(s, i[1])
-                analise, t = verifica_leitura(s, i[1])
+                analise, t = verifica_leitura(s, i[1])               
                 if analise == True:
+                    converte_certify(s, i[1], k)
                     esperando.append(i) 
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True: return 'O scheduler possui deadlock!!!!!!!'
@@ -151,11 +167,14 @@ def protocolo(vetor_tran):
                     s.append(i)
         vetor_tran = esperando
         if len(vetor_tran) == 0: break
-    nx.draw(grafo, with_labels=True)
-    plt.show()
     return s
 
 print(protocolo(vetor_tran))
 
-
+"""
+bloqueios.lock_read(vetor_tran[0])
+bloqueios.lock_write(vetor_tran[1])
+bloqueios.lock_write(vetor_tran[2])
+converte_certify(vetor_tran, vetor_tran[3][1], 3)
+"""
 

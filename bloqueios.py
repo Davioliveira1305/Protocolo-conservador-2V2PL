@@ -2,6 +2,10 @@ import transactions
 import objetos
 from objetos import Objetos
 
+"""
+Função que concede um bloqueio do tipo leitura para um determinado objeto e sobe intencionais de leitura
+para os seus ascendentes
+"""
 def lock_read(vetor):
     bloqueio = ['RL']
     t = vetor[1].get_transaction()
@@ -22,6 +26,10 @@ def lock_read(vetor):
         bloqueio.append(t)
         vetor[2].parentes[j][0].bloqueios.append(bloqueio)
 
+"""
+Função que concede bloqueio do tipo leitura para um determinado objeto e sobe intencionais de escrita
+para os seus ascendentes
+"""
 def lock_write(vetor):
     bloqueio = ['WL']
     t = vetor[1].get_transaction()
@@ -42,6 +50,10 @@ def lock_write(vetor):
         bloqueio.append(t)
         vetor[2].parentes[j][0].bloqueios.append(bloqueio)
 
+"""
+Função que concede bloqueio do tipo update para um determinado objeto e sobe intencionais de update
+para os seus ascendentes
+"""
 def lock_update(vetor):
     bloqueio = ['UL']
     t = vetor[1].get_transaction()
@@ -62,6 +74,9 @@ def lock_update(vetor):
         bloqueio.append(t)
         vetor[2].parentes[j][0].bloqueios.append(bloqueio)
 
+"""
+Função que tem como objetivo liberar bloqueios de objetos associados a determinada transação
+"""
 def liberar_locks(objeto, transaction):
     verifica = transaction.get_transaction()
     for i, j in reversed(list(enumerate(objeto.bloqueios))):
@@ -80,6 +95,10 @@ def liberar_locks(objeto, transaction):
             if k[1] == verifica:
                 del objeto.parentes[i][0].bloqueios[j]
 
+"""
+Função que define bloqueio do tipo certify para determinado objeto e sobe intencionais de certify
+para os seus ascendentes
+"""
 def lock_certify(objeto, transaction):
     transaction = transaction.get_transaction()
     for i, j in enumerate(objeto.bloqueios):
@@ -96,46 +115,32 @@ def lock_certify(objeto, transaction):
     for i in ordem:
         for j, k in enumerate(objeto.parentes[i][0].bloqueios):
             if k[1] == transaction and k[0] == 'IWL':
-                objeto.parentes[i][0].bloqueios[j][0] = 'ICL'
+                objeto.parentes[i][0].bloqueios[j][0] = 'ICL'    
 
-
-def check_locks(vetor, tipo:str, transaction) -> tuple:
+def check_locks(vetor,objeto, tipo:str, transaction):
+    vetor_2 = []
+    vetor_comp = []
+    if len(vetor) == 0: return (True, None)
+    for k in vetor:
+        if len(k) == 3: vetor_comp.append(k)
+    for j in vetor_comp:
+        if j[2].get_id() == objeto[2].get_id():
+            if j not in vetor_2: vetor_2.append(j)
     transactions = []
-    if len(vetor) == 0: return (True, None)    
+    if len(vetor_2) == 0: return (True, None)    
     if tipo == 'RL':
-        for i in vetor[0][2].bloqueios:
+        for i in vetor_2[0][2].bloqueios:
             if i[0] == 'CL' or i[0] == 'ICL':
                 if i[1] != transaction.get_transaction():
                     return (False, i[1])
             transactions.append(i[1])
         return (True, transactions)
     else:
-        for i in vetor[0][2].bloqueios:
+        for i in vetor_2[0][2].bloqueios:          
             if i[0] == 'CL' or i[0] == 'WL' or i[0] == 'ICL' or i[0] == 'IWL':
                 if i[1] != transaction.get_transaction(): 
                     return (False, i[1])
             transactions.append(i[1])
         return (True, transactions)
-    return (True, None)
-    
-
-def converte_certify(vetor, transaction):
-    vetor_obj = []
-    for i in vetor:
-        if i[1].get_transaction() == transaction.get_transaction():
-            vetor_obj.append(i[2])
-    vetor_obj_2 = []
-    for j in vetor_obj:
-        selection = True
-        for k in j.bloqueios:
-            if k[0] == 'RL' and k[1] != transaction.get_transaction():
-                selection = False
-                break
-        if selection:
-            vetor_obj_2.append(j)       
-    for d in vetor_obj_2:
-        lock_certify(d, transaction)
 
         
-                
-
