@@ -13,8 +13,9 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'R2(TP1)R1(TP2)W2(TP3)R3(TP1)R1(TP3)W3(TP4)R2(TP4)W3(TP4)C3C1C2'
+scheduler = 'U1(TP1)R1(TP1)R2(TP1)W1(TP1)W2(TP1)C1C2'
 
+# Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
     elementos = list(scheduler)
     vetor_tran = []
@@ -30,7 +31,7 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 5])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
-        if elementos[j] == 'W':
+        elif elementos[j] == 'W':
             vetor = []
             aux_1 = []
             vetor.append(operations.Operation('W'))
@@ -40,15 +41,26 @@ def cria_objetos(scheduler):
             aux_1.append(elementos[j + 5])
             vetor.append(dic[''.join(aux_1)])
             vetor_tran.append(vetor)
-        if elementos[j] == 'C':
+        elif elementos[j] == 'C':
             vetor = []
             vetor.append(operations.Operation('C')) 
             vetor.append(transactions.Transaction(elementos[j + 1]))
+            vetor_tran.append(vetor)
+        elif elementos[j] == 'U':
+            vetor = []
+            aux = []
+            vetor.append(operations.Operation('U'))
+            vetor.append(transactions.Transaction(elementos[j + 1]))
+            aux.append(elementos[j + 3])
+            aux.append(elementos[j + 4])
+            aux.append(elementos[j + 5])
+            vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
     return vetor_tran
 
 vetor_tran = cria_objetos(scheduler)
 
+# Cria os nós do nosso grafo de espera
 def cria_nos(grafo, vetor_tran):
     transactions = []
     for i in vetor_tran:
@@ -56,6 +68,7 @@ def cria_nos(grafo, vetor_tran):
             grafo.add_node(f'{i[1].get_transaction()}')
             transactions.append(i[1])
 
+# Verifica se o nosso grafo possui ciclo
 def grafo_espera(grafo):
     tem_ciclo = nx.is_directed_acyclic_graph(grafo)
     if tem_ciclo:
@@ -63,10 +76,12 @@ def grafo_espera(grafo):
     else:
         return True
 
+# Verifica se há alguma outra transação escrevendo sobre um determinado objeto
 def verifica_escrita(transaction, objeto):
     for i in objeto.bloqueios:
         if transaction.get_transaction() == i[1] and i[0] == 'WL': return True
 
+# Verifica se há alguma outra transação lendo sobre um determinado objeto
 def verifica_leitura(vetor, transaction):
     vetor_obj = []
     for i in vetor:
@@ -79,10 +94,12 @@ def verifica_leitura(vetor, transaction):
                     return (True, k[1])
     return (False, None)
 
+# Função que vai garantir que uma transação vai ser executada corretamente
 def verifica_operation(vetor, transaction):
     for i in vetor:
         if i[1].get_transaction() == transaction.get_transaction(): return True
 
+# Função que vai liberar os bloqueios associados a uma determinada transação
 def locks_commit(vetor, transaction):
     for i in vetor:
         if i[0].operation != 'Commit':
@@ -95,6 +112,7 @@ def abortar_transaction(vetor):
             del vetor[k]
     return vetor
 
+# Função que vai converter os bloqueios de escrita em bloqueios de certify
 def converte_certify(vetor, transaction, k):
     vetor_obj = []    
     for i in vetor:
@@ -113,6 +131,9 @@ def converte_certify(vetor, transaction, k):
     for d in vetor_obj_2:
         bloqueios.lock_certify(d, transaction)
 
+"""
+Função principal que implementa o protocolo de controle de concorrência 2V2PL
+"""
 def protocolo(vetor_tran):
     # Criar um objeto do tipo grafo direcionado, será o nosso grafo de espera
     grafo = nx.DiGraph()
@@ -149,8 +170,10 @@ def protocolo(vetor_tran):
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True:
                         return 'O scheduler possui deadlock!!!!!!!'
-                    esperando.append(i)          
-            else:
+                    esperando.append(i)
+            elif (i[0].get_operation() == 'Update'):
+                bloqueios.lock_update(i)         
+            elif(i[0].get_operation() == 'Commit'):
                 analise, t = verifica_leitura(s, i[1])               
                 if analise == True:
                     converte_certify(s, i[1], k)

@@ -5,6 +5,7 @@ class Operation:
   def __init__(self, tipo: str):
     if tipo == 'R': self.operation = 'Read'
     if tipo == 'W': self.operation = 'Write'
+    if tipo == 'U': self.operation = 'Update'
     if tipo == 'C': self.operation = 'Commit'
 
   def get_operation(self) -> str:

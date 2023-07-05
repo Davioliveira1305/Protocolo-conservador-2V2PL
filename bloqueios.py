@@ -117,6 +117,9 @@ def lock_certify(objeto, transaction):
             if k[1] == transaction and k[0] == 'IWL':
                 objeto.parentes[i][0].bloqueios[j][0] = 'ICL'    
 
+"""
+Funcção que verifica se um bloqueio pode ser concedido a alguma transação
+"""
 def check_locks(vetor,objeto, tipo:str, transaction):
     vetor_2 = []
     vetor_comp = []
@@ -130,14 +133,14 @@ def check_locks(vetor,objeto, tipo:str, transaction):
     if len(vetor_2) == 0: return (True, None)    
     if tipo == 'RL':
         for i in vetor_2[0][2].bloqueios:
-            if i[0] == 'CL' or i[0] == 'ICL':
+            if i[0] == 'CL' or i[0] == 'ICL' or i[0] == 'UL' or i[0] == 'IUL':
                 if i[1] != transaction.get_transaction():
                     return (False, i[1])
             transactions.append(i[1])
         return (True, transactions)
     else:
         for i in vetor_2[0][2].bloqueios:          
-            if i[0] == 'CL' or i[0] == 'WL' or i[0] == 'ICL' or i[0] == 'IWL':
+            if i[0] == 'CL' or i[0] == 'UL' or i[0] == 'WL' or i[0] == 'ICL' or i[0] == 'IWL' or i[0] == 'IUL':
                 if i[1] != transaction.get_transaction(): 
                     return (False, i[1])
             transactions.append(i[1])
