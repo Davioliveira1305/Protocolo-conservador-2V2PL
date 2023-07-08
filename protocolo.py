@@ -4,7 +4,6 @@ import operations
 import transactions
 import main
 import networkx as nx
-import matplotlib.pyplot as plt
 import copy
 
 # Inicializando o banco de dados
@@ -13,7 +12,7 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'U1(TP1)R1(TP1)R2(TP1)W1(TP1)W2(TP1)C1C2'
+scheduler = 'R1(TB3)R2(TB3)W1(TB3)W2(TB3)C1C2'
 
 # Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
@@ -105,12 +104,17 @@ def locks_commit(vetor, transaction):
         if i[0].operation != 'Commit':
             bloqueios.liberar_locks(i[2], transaction)
 
+# Função que aborta a transação mais recente quando o scheduler se envolve em deadlock
 def abortar_transaction(vetor):
-    transaction = vetor[-1][1].get_transaction()
+    trans = []
+    for i in vetor:
+        if i[1].get_transaction() not in trans:
+            trans.append(i[1].get_transaction())
+    transaction = trans[-1]
     for k in reversed(range(len(vetor))):
         if vetor[k][1].get_transaction() == transaction:
             del vetor[k]
-    return vetor
+    return vetor, transaction
 
 # Função que vai converter os bloqueios de escrita em bloqueios de certify
 def converte_certify(vetor, transaction, k):
@@ -131,15 +135,20 @@ def converte_certify(vetor, transaction, k):
     for d in vetor_obj_2:
         bloqueios.lock_certify(d, transaction)
 
-"""
-Função principal que implementa o protocolo de controle de concorrência 2V2PL
-"""
+# Função que converte um bloqueio de update em escrita
+def convert_update(objeto, transaction):
+    transaction = transaction.get_transaction()
+    for i, j in enumerate(objeto.bloqueios):
+        if j[1] == transaction and j[0] == 'UL':
+            objeto.bloqueios[i][0] = 'WL'
+
+# Função principal que implementa o protocolo de controle de concorrência 2V2PL
 def protocolo(vetor_tran):
     # Criar um objeto do tipo grafo direcionado, será o nosso grafo de espera
     grafo = nx.DiGraph()
     # Criar os nós do grafo
     cria_nos(grafo, vetor_tran)
-    s = []
+    s = []  
     while True:        
         esperando = []
         for k,i in enumerate(vetor_tran):
@@ -153,8 +162,12 @@ def protocolo(vetor_tran):
                     i[2].version_normal()                                
                 else:
                     grafo.add_edge(t,i[1].get_transaction())
-                    if grafo_espera(grafo) == True: return 'O scheduler possui deadlock!!!!!!!'    
+                    if grafo_espera(grafo) == True:
+                        novo_vetor_tran, transc = abortar_transaction(s)
+                        print(f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!")
+                        return protocolo(novo_vetor_tran)
                     esperando.append(i)
+                convert_update(i[2], i[1])
             elif (i[0].get_operation() == 'Read'):
                 analise, t = bloqueios.check_locks(s,i, 'RL', i[1])
                 if analise != False:
@@ -169,17 +182,27 @@ def protocolo(vetor_tran):
                 else:
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True:
-                        return 'O scheduler possui deadlock!!!!!!!'
+                        novo_vetor_tran, transc = abortar_transaction(s)
+                        print(f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!")
+                        return protocolo(novo_vetor_tran)
                     esperando.append(i)
             elif (i[0].get_operation() == 'Update'):
-                bloqueios.lock_update(i)         
+                analise, t = bloqueios.check_locks(s,i, 'WL', i[1])
+                if analise != False:
+                    bloqueios.lock_update(i)
+                    s.append(i)
+                else:
+                    esperando.append(i)    
             elif(i[0].get_operation() == 'Commit'):
                 analise, t = verifica_leitura(s, i[1])               
                 if analise == True:
                     converte_certify(s, i[1], k)
                     esperando.append(i) 
                     grafo.add_edge(t,i[1].get_transaction())
-                    if grafo_espera(grafo) == True: return 'O scheduler possui deadlock!!!!!!!'
+                    if grafo_espera(grafo) == True:
+                        novo_vetor_tran, transc = abortar_transaction(s)
+                        print(f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!")
+                        return protocolo(novo_vetor_tran)
                 elif verifica_operation(esperando, i[1]) == True:
                     if i not in esperando:
                         esperando.append(i)
@@ -194,10 +217,5 @@ def protocolo(vetor_tran):
 
 print(protocolo(vetor_tran))
 
-"""
-bloqueios.lock_read(vetor_tran[0])
-bloqueios.lock_write(vetor_tran[1])
-bloqueios.lock_write(vetor_tran[2])
-converte_certify(vetor_tran, vetor_tran[3][1], 3)
-"""
+
 
