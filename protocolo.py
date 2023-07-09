@@ -6,13 +6,13 @@ import transactions
 import networkx as nx
 import copy
 
-"""# Inicializando o banco de dados
+""""# Inicializando o banco de dados
 ob = objetos.Objetos('Banco', 'BD')
 
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'W1(AA1)W2(TP7)C2C1'
+scheduler = 'R1(AA1)W2(TB1)R3(TP4)C2C1C3'
 
 # Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
@@ -87,8 +87,9 @@ def verifica_escrita(transaction, objeto):
 def verifica_leitura(vetor, transaction):
     vetor_obj = []
     for i in vetor:
-        if i[1].get_transaction() == transaction.get_transaction():
-            vetor_obj.append(i[2])
+        if i[0].get_operation() != 'Commit' and i[0].get_operation() == 'Write':
+            if i[1].get_transaction() == transaction.get_transaction():
+                vetor_obj.append(i[2])
     for j in vetor_obj:
         for k in j.bloqueios:
             if k[0] == 'RL'or k[0] == 'IRL':
@@ -197,9 +198,9 @@ def protocolo(vetor_tran):
                     s.append(i)
                 else:
                     esperando.append(i)    
-            elif(i[0].get_operation() == 'Commit'):
-                analise, t = verifica_leitura(s, i[1])
-                converte_certify(s, i[1], k)            
+            elif(i[0].get_operation() == 'Commit'): 
+                analise, t = verifica_leitura(vetor_tran, i[1])
+                converte_certify(vetor_tran, i[1], k)            
                 if analise == True:
                     esperando.append(i) 
                     grafo.add_edge(t,i[1].get_transaction())
