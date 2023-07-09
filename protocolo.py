@@ -12,7 +12,7 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'R1(TB3)R2(TB3)W1(TB3)W2(TB3)C1C2'
+scheduler = 'U1(TP1)R1(TP1)U2(TP1)R2(TP1)W1(TP1)W2(TP1)C2C1'
 
 # Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
@@ -28,6 +28,7 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 3])
             aux.append(elementos[j + 4])
             aux.append(elementos[j + 5])
+            if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'W':
@@ -38,6 +39,7 @@ def cria_objetos(scheduler):
             aux_1.append(elementos[j + 3])
             aux_1.append(elementos[j + 4])
             aux_1.append(elementos[j + 5])
+            if elementos[j + 6] != ')': aux_1.append(elementos[j +6])
             vetor.append(dic[''.join(aux_1)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'C':
@@ -53,6 +55,7 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 3])
             aux.append(elementos[j + 4])
             aux.append(elementos[j + 5])
+            if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
     return vetor_tran
@@ -84,11 +87,11 @@ def verifica_escrita(transaction, objeto):
 def verifica_leitura(vetor, transaction):
     vetor_obj = []
     for i in vetor:
-        if i[1].get_transaction() == transaction.get_transaction() and i[0].get_operation() == 'Write':
+        if i[1].get_transaction() == transaction.get_transaction():
             vetor_obj.append(i[2])
     for j in vetor_obj:
         for k in j.bloqueios:
-            if k[0] == 'RL':
+            if k[0] == 'RL'or k[0] == 'IRL':
                 if k[1] != transaction.get_transaction():
                     return (True, k[1])
     return (False, None)
@@ -105,16 +108,16 @@ def locks_commit(vetor, transaction):
             bloqueios.liberar_locks(i[2], transaction)
 
 # Função que aborta a transação mais recente quando o scheduler se envolve em deadlock
-def abortar_transaction(vetor):
+def abortar_transaction(vetor,vetor_2):
     trans = []
     for i in vetor:
         if i[1].get_transaction() not in trans:
             trans.append(i[1].get_transaction())
     transaction = trans[-1]
-    for k in reversed(range(len(vetor))):
-        if vetor[k][1].get_transaction() == transaction:
-            del vetor[k]
-    return vetor, transaction
+    for k in reversed(range(len(vetor_2))):
+        if vetor_2[k][1].get_transaction() == transaction:
+            del vetor_2[k]
+    return vetor_2, transaction
 
 # Função que vai converter os bloqueios de escrita em bloqueios de certify
 def converte_certify(vetor, transaction, k):
@@ -127,9 +130,10 @@ def converte_certify(vetor, transaction, k):
     for j in vetor_obj:
         selection = True
         for k in j.bloqueios:
-            if k[0] == 'RL' and k[1] != transaction.get_transaction():
-                selection = False
-                break
+            if k[0] == 'RL' or k[0] == 'IRL':
+                if k[1] != transaction.get_transaction():
+                    selection = False
+                    break
         if selection:
             vetor_obj_2.append(j)
     for d in vetor_obj_2:
@@ -159,15 +163,15 @@ def protocolo(vetor_tran):
                     i[2].converte_version(i[1]) 
                     objeto_copy = copy.deepcopy(i)
                     s.append(objeto_copy)
-                    i[2].version_normal()                                
+                    i[2].version_normal()
+                    convert_update(i[2], i[1])                               
                 else:
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True:
-                        novo_vetor_tran, transc = abortar_transaction(s)
-                        print(f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!")
-                        return protocolo(novo_vetor_tran)
+                        novo_vetor_tran, transc = abortar_transaction(s, vetor_tran)
+                        grafo.remove_node(transc)
+                        return f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!"
                     esperando.append(i)
-                convert_update(i[2], i[1])
             elif (i[0].get_operation() == 'Read'):
                 analise, t = bloqueios.check_locks(s,i, 'RL', i[1])
                 if analise != False:
@@ -182,9 +186,9 @@ def protocolo(vetor_tran):
                 else:
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True:
-                        novo_vetor_tran, transc = abortar_transaction(s)
-                        print(f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!")
-                        return protocolo(novo_vetor_tran)
+                        novo_vetor_tran, transc = abortar_transaction(s, vetor_tran)
+                        grafo.remove_node(transc)
+                        return f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!"
                     esperando.append(i)
             elif (i[0].get_operation() == 'Update'):
                 analise, t = bloqueios.check_locks(s,i, 'WL', i[1])
@@ -194,15 +198,15 @@ def protocolo(vetor_tran):
                 else:
                     esperando.append(i)    
             elif(i[0].get_operation() == 'Commit'):
-                analise, t = verifica_leitura(s, i[1])               
+                analise, t = verifica_leitura(s, i[1])
+                converte_certify(s, i[1], k)            
                 if analise == True:
-                    converte_certify(s, i[1], k)
                     esperando.append(i) 
                     grafo.add_edge(t,i[1].get_transaction())
                     if grafo_espera(grafo) == True:
-                        novo_vetor_tran, transc = abortar_transaction(s)
-                        print(f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!")
-                        return protocolo(novo_vetor_tran)
+                        novo_vetor_tran, transc = abortar_transaction(s, vetor_tran)
+                        grafo.remove_node(transc)
+                        return f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!"
                 elif verifica_operation(esperando, i[1]) == True:
                     if i not in esperando:
                         esperando.append(i)

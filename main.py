@@ -17,6 +17,7 @@ dic = objetos.criar_esquema(ob,2,2,2,2)
 
 scheduler = str(input("Digite o scheduler: "))
 
+# Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
     elementos = list(scheduler)
     vetor_tran = []
@@ -30,6 +31,7 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 3])
             aux.append(elementos[j + 4])
             aux.append(elementos[j + 5])
+            if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'W':
@@ -40,6 +42,7 @@ def cria_objetos(scheduler):
             aux_1.append(elementos[j + 3])
             aux_1.append(elementos[j + 4])
             aux_1.append(elementos[j + 5])
+            if elementos[j + 6] != ')': aux_1.append(elementos[j +6])
             vetor.append(dic[''.join(aux_1)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'C':
@@ -55,11 +58,13 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 3])
             aux.append(elementos[j + 4])
             aux.append(elementos[j + 5])
+            if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
     return vetor_tran
 vetor_tran = cria_objetos(scheduler)
 scheduler_correct = protocolo.protocolo(vetor_tran)
+
 
 def descodifica(scheduler_correct):
     vetor = []
@@ -88,5 +93,6 @@ def descodifica(scheduler_correct):
         string_resultante = ''.join(vetor)
     return string_resultante
 
-
-print(descodifica(scheduler_correct))"""
+if type(scheduler_correct) == str: print(scheduler_correct)
+else:
+    print(f"Schedule correto = {descodifica(scheduler_correct)}")"""
