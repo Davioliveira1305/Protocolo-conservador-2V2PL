@@ -1,18 +1,18 @@
-import objetos
+#import objetos
 import bloqueios
 import operations
 import transactions
-import main
+#import main
 import networkx as nx
 import copy
 
-# Inicializando o banco de dados
+"""# Inicializando o banco de dados
 ob = objetos.Objetos('Banco', 'BD')
 
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = 'U1(TP1)R1(TP1)U2(TP1)R2(TP1)W1(TP1)W2(TP1)C2C1'
+scheduler = 'W1(AA1)W2(TP7)C2C1'
 
 # Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
@@ -28,7 +28,7 @@ def cria_objetos(scheduler):
             aux.append(elementos[j + 3])
             aux.append(elementos[j + 4])
             aux.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux.append(elementos[j +6])
+            if elementos[j + 6] != ')': aux.append(elementos[j + 6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'W':
@@ -60,7 +60,7 @@ def cria_objetos(scheduler):
             vetor_tran.append(vetor)
     return vetor_tran
 
-vetor_tran = cria_objetos(scheduler)
+vetor_tran = cria_objetos(scheduler)"""
 
 # Cria os nós do nosso grafo de espera
 def cria_nos(grafo, vetor_tran):
@@ -157,7 +157,7 @@ def protocolo(vetor_tran):
         esperando = []
         for k,i in enumerate(vetor_tran):
             if i[0].get_operation() == 'Write':
-                analise, t = bloqueios.check_locks(s,i, 'WL', i[1])
+                analise, t = bloqueios.check_locks(vetor_tran,i, 'WL', i[1])
                 if analise != False: 
                     bloqueios.lock_write(i)                  
                     i[2].converte_version(i[1]) 
@@ -173,7 +173,7 @@ def protocolo(vetor_tran):
                         return f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!"
                     esperando.append(i)
             elif (i[0].get_operation() == 'Read'):
-                analise, t = bloqueios.check_locks(s,i, 'RL', i[1])
+                analise, t = bloqueios.check_locks(vetor_tran,i, 'RL', i[1])
                 if analise != False:
                     bloqueios.lock_read(i)
                     if verifica_escrita(i[1], i[2]) == True:
@@ -191,7 +191,7 @@ def protocolo(vetor_tran):
                         return f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!"
                     esperando.append(i)
             elif (i[0].get_operation() == 'Update'):
-                analise, t = bloqueios.check_locks(s,i, 'WL', i[1])
+                analise, t = bloqueios.check_locks(vetor_tran,i, 'WL', i[1])
                 if analise != False:
                     bloqueios.lock_update(i)
                     s.append(i)
@@ -219,7 +219,9 @@ def protocolo(vetor_tran):
         if len(vetor_tran) == 0: break
     return s
 
-print(protocolo(vetor_tran))
+#print(protocolo(vetor_tran))
 
-
+"""bloqueios.lock_read(vetor_tran[0])
+print(vetor_tran[1][2].bloqueios)
+"""
 

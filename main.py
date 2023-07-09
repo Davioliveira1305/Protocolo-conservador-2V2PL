@@ -1,7 +1,7 @@
-#import objetos
+import objetos
 import operations
 import transactions
-#import protocolo
+import protocolo
 from bloqueios import lock_read
 from bloqueios import lock_write
 from bloqueios import liberar_locks
@@ -9,7 +9,7 @@ from bloqueios import lock_certify
 from bloqueios import check_locks
 
 
-"""# Inicializando o banco de dados
+# Inicializando o banco de dados
 ob = objetos.Objetos('Banco', 'BD')
 
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
@@ -28,10 +28,14 @@ def cria_objetos(scheduler):
             aux = []
             vetor.append(operations.Operation('R'))
             vetor.append(transactions.Transaction(elementos[j + 1]))
-            aux.append(elementos[j + 3])
-            aux.append(elementos[j + 4])
-            aux.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux.append(elementos[j +6])
+            if elementos[j + 3] == 'B':
+                aux.append(elementos[j + 3])
+                aux.append(elementos[j + 4])
+            else:
+                aux.append(elementos[j + 3])
+                aux.append(elementos[j + 4])
+                aux.append(elementos[j + 5])
+                if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'W':
@@ -39,10 +43,14 @@ def cria_objetos(scheduler):
             aux_1 = []
             vetor.append(operations.Operation('W'))
             vetor.append(transactions.Transaction(elementos[j + 1]))
-            aux_1.append(elementos[j + 3])
-            aux_1.append(elementos[j + 4])
-            aux_1.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux_1.append(elementos[j +6])
+            if elementos[j + 3] == 'B':
+                aux_1.append(elementos[j + 3])
+                aux_1.append(elementos[j + 4])
+            else:
+                aux_1.append(elementos[j + 3])
+                aux_1.append(elementos[j + 4])
+                aux_1.append(elementos[j + 5])
+                if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux_1)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'C':
@@ -55,10 +63,14 @@ def cria_objetos(scheduler):
             aux = []
             vetor.append(operations.Operation('U'))
             vetor.append(transactions.Transaction(elementos[j + 1]))
-            aux.append(elementos[j + 3])
-            aux.append(elementos[j + 4])
-            aux.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux.append(elementos[j +6])
+            if elementos[j + 3] == 'B':
+                aux.append(elementos[j + 3])
+                aux.append(elementos[j + 4])
+            else:
+                aux.append(elementos[j + 3])
+                aux.append(elementos[j + 4])
+                aux.append(elementos[j + 5])
+                if elementos[j + 6] != ')': aux.append(elementos[j +6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
     return vetor_tran
@@ -84,15 +96,9 @@ def descodifica(scheduler_correct):
         elif i[0].get_operation() == 'Commit': 
             vetor.append('C')
             vetor.append(i[1].get_index())
-        elif i[0].get_operation() == 'Update': 
-            vetor.append('R')
-            vetor.append(i[1].get_index())
-            vetor.append('(')
-            vetor.append(i[2].get_id())
-            vetor.append(')')
         string_resultante = ''.join(vetor)
     return string_resultante
 
 if type(scheduler_correct) == str: print(scheduler_correct)
 else:
-    print(f"Schedule correto = {descodifica(scheduler_correct)}")"""
+    print(f"Schedule correto = {descodifica(scheduler_correct)}")

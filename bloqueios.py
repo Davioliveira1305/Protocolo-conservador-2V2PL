@@ -24,7 +24,8 @@ def lock_read(vetor):
         bloqueio = ['RL']
         new = vetor[1].get_transaction()
         bloqueio.append(t)
-        vetor[2].parentes[j][0].bloqueios.append(bloqueio)
+        for k in range(len(vetor[2].parentes[j])):
+            vetor[2].parentes[j][k].bloqueios.append(bloqueio)
 
 """
 Função que concede bloqueio do tipo leitura para um determinado objeto e sobe intencionais de escrita
@@ -48,7 +49,8 @@ def lock_write(vetor):
         bloqueio = ['WL']
         new = vetor[1].get_transaction()
         bloqueio.append(t)
-        vetor[2].parentes[j][0].bloqueios.append(bloqueio)
+        for k in range(len(vetor[2].parentes[j])):
+            vetor[2].parentes[j][k].bloqueios.append(bloqueio)
 
 """
 Função que concede bloqueio do tipo update para um determinado objeto e sobe intencionais de update
@@ -72,7 +74,8 @@ def lock_update(vetor):
         bloqueio = ['UL']
         new = vetor[1].get_transaction()
         bloqueio.append(t)
-        vetor[2].parentes[j][0].bloqueios.append(bloqueio)
+        for k in range(len(vetor[2].parentes[j])):
+            vetor[2].parentes[j][k].bloqueios.append(bloqueio)
 
 """
 Função que tem como objetivo liberar bloqueios de objetos associados a determinada transação
@@ -130,7 +133,7 @@ def check_locks(vetor,objeto, tipo:str, transaction):
         if j[2].get_id() == objeto[2].get_id():
             if j not in vetor_2: vetor_2.append(j)
     transactions = []
-    if len(vetor_2) == 0: return (True, None)    
+    if len(vetor_2) == 0: return (True, None) 
     if tipo == 'RL':
         for i in vetor_2[0][2].bloqueios:
             if i[0] == 'CL' or i[0] == 'ICL' or i[0] == 'UL' or i[0] == 'IUL':
