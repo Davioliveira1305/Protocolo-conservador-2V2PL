@@ -134,7 +134,7 @@ def protocolo(vetor_tran):
                         return f"{transc} se envolveu em um deadlock e foi abortada por ser a transação mais recente!!!!!!"
                     esperando.append(i)
             elif (i[0].get_operation() == 'Update'):
-                analise, t = bloqueios.check_locks(vetor_tran,i, 'WL', i[1])
+                analise, t = bloqueios.check_locks(vetor_tran,i, 'UL', i[1])
                 if analise != False:
                     bloqueios.lock_update(i)
                     s.append(i)

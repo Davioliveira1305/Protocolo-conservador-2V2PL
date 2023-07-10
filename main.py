@@ -37,7 +37,7 @@ def cria_objetos(scheduler):
                 aux.append(elementos[j + 3])
                 aux.append(elementos[j + 4])
                 aux.append(elementos[j + 5])
-                if elementos[j + 6] != ')': aux.append(elementos[j +6])
+                if elementos[j + 6] != ')': aux.append(elementos[j + 6])
             vetor.append(dic[''.join(aux)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'W':
@@ -52,7 +52,7 @@ def cria_objetos(scheduler):
                 aux_1.append(elementos[j + 3])
                 aux_1.append(elementos[j + 4])
                 aux_1.append(elementos[j + 5])
-                if elementos[j + 6] != ')': aux.append(elementos[j +6])
+                if elementos[j + 6] != ')': aux_1.append(elementos[j + 6])
             vetor.append(dic[''.join(aux_1)])
             vetor_tran.append(vetor)
         elif elementos[j] == 'C':
