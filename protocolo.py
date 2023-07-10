@@ -1,66 +1,8 @@
-#import objetos
 import bloqueios
 import operations
 import transactions
-#import main
 import networkx as nx
 import copy
-
-""""# Inicializando o banco de dados
-ob = objetos.Objetos('Banco', 'BD')
-
-# Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
-dic = objetos.criar_esquema(ob,2,2,2,2)
-
-scheduler = 'R1(AA1)W2(TB1)R3(TP4)C2C1C3'
-
-# Cria a nossa matriz de operações a serem executadas
-def cria_objetos(scheduler):
-    elementos = list(scheduler)
-    vetor_tran = []
-    i = [i for i in range(len(elementos))]
-    for j in i:
-        if elementos[j] == 'R':
-            vetor = []
-            aux = []
-            vetor.append(operations.Operation('R'))
-            vetor.append(transactions.Transaction(elementos[j + 1]))
-            aux.append(elementos[j + 3])
-            aux.append(elementos[j + 4])
-            aux.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux.append(elementos[j + 6])
-            vetor.append(dic[''.join(aux)])
-            vetor_tran.append(vetor)
-        elif elementos[j] == 'W':
-            vetor = []
-            aux_1 = []
-            vetor.append(operations.Operation('W'))
-            vetor.append(transactions.Transaction(elementos[j + 1]))
-            aux_1.append(elementos[j + 3])
-            aux_1.append(elementos[j + 4])
-            aux_1.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux_1.append(elementos[j +6])
-            vetor.append(dic[''.join(aux_1)])
-            vetor_tran.append(vetor)
-        elif elementos[j] == 'C':
-            vetor = []
-            vetor.append(operations.Operation('C')) 
-            vetor.append(transactions.Transaction(elementos[j + 1]))
-            vetor_tran.append(vetor)
-        elif elementos[j] == 'U':
-            vetor = []
-            aux = []
-            vetor.append(operations.Operation('U'))
-            vetor.append(transactions.Transaction(elementos[j + 1]))
-            aux.append(elementos[j + 3])
-            aux.append(elementos[j + 4])
-            aux.append(elementos[j + 5])
-            if elementos[j + 6] != ')': aux.append(elementos[j +6])
-            vetor.append(dic[''.join(aux)])
-            vetor_tran.append(vetor)
-    return vetor_tran
-
-vetor_tran = cria_objetos(scheduler)"""
 
 # Cria os nós do nosso grafo de espera
 def cria_nos(grafo, vetor_tran):
@@ -220,9 +162,5 @@ def protocolo(vetor_tran):
         if len(vetor_tran) == 0: break
     return s
 
-#print(protocolo(vetor_tran))
 
-"""bloqueios.lock_read(vetor_tran[0])
-print(vetor_tran[1][2].bloqueios)
-"""
 

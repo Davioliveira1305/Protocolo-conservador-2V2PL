@@ -15,7 +15,9 @@ ob = objetos.Objetos('Banco', 'BD')
 # Esquema com 1 Banco de dados, 2 areas, cada área com 2 tabelas, cada tabela com 2 páginas e cada página com 2 tuplas.
 dic = objetos.criar_esquema(ob,2,2,2,2)
 
-scheduler = str(input("Digite o scheduler: "))
+
+print('INSTALE A BIBLIOTECA NETWORKX PARA O GRAFO DE ESPERA!!!!')
+scheduler = str(input("Digite o schedule: "))
 
 # Cria a nossa matriz de operações a serem executadas
 def cria_objetos(scheduler):
@@ -98,7 +100,6 @@ def descodifica(scheduler_correct):
             vetor.append(i[1].get_index())
         string_resultante = ''.join(vetor)
     return string_resultante
-
 if type(scheduler_correct) == str: print(scheduler_correct)
 else:
     print(f"Schedule correto = {descodifica(scheduler_correct)}")
